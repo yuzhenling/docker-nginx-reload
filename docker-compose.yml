@@ -1,0 +1,36 @@
+services:
+  business:
+    build: ./business
+    container_name: demo-business
+    networks:
+      - demo
+
+  gateway:
+    build: ./gateway
+    container_name: demo-gateway
+    environment:
+      BUSINESS_URL: http://business:8000
+      PORT: "8080"
+    depends_on:
+      - business
+    networks:
+      - demo
+
+  nginx:
+    build: ./nginx
+    container_name: demo-nginx
+    ports:
+      - "8080:80"
+    depends_on:
+      - gateway
+    networks:
+      - demo
+
+networks:
+  demo:
+    driver: bridge
+    ipam:
+      config:
+        # Fixed subnet so we can pin an IP with `docker run --ip` when reproducing
+        # nginx stale upstream DNS after gateway recreate.
+        - subnet: 172.28.0.0/16
